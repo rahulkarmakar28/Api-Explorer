@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { fetchResources } from '../api/api';
-import { Table, Container, Title, TextInput, Loader, Card, Group, Badge, Button, Text } from '@mantine/core';
+import { Table, Container, Title, TextInput, Loader, Card, Group, Badge, Button, Text, ScrollArea } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useAppTheme } from '../store/app.store';
 
@@ -32,7 +32,7 @@ const ResourceList: React.FC = () => {
   );
 
   return (
-    <Container size="md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2rem' }}>
+    <Container size="md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2rem', padding: '1rem' }}>
       <Card
         shadow="xl"
         padding="xl"
@@ -52,30 +52,32 @@ const ResourceList: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           styles={{ input: { borderRadius: '2rem', backgroundColor: theme === 'dark' ? '#333' : '#DCE7FCFF', color: theme === 'dark' ? 'white' : 'black' } }}
         />
-        <Table striped highlightOnHover>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Birth Year</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredResults.map((person: Person, index: number) => {
-              const idMatch = person.url.match(/\/(\d+)\/?$/);
-              const id = idMatch ? idMatch[1] : (index + 1).toString();
-              return (
-                <tr key={id}>
-                  <td><Badge color="blue" variant="filled" size="lg">{person.name}</Badge></td>
-                  <td>{person.birth_year}</td>
-                  <td>
-                    <Button component={Link} to={`/resource/people/${id}`} color="primary" radius="xl" size="sm">View</Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+        <ScrollArea style={{ width: '100%', maxHeight: '60vh' }}>
+          <Table striped highlightOnHover>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Birth Year</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredResults.map((person: Person, index: number) => {
+                const idMatch = person.url.match(/\/(\d+)\/?$/);
+                const id = idMatch ? idMatch[1] : (index + 1).toString();
+                return (
+                  <tr key={id}>
+                    <td><Badge color="blue" variant="filled" size="lg">{person.name}</Badge></td>
+                    <td>{person.birth_year}</td>
+                    <td>
+                      <Button component={Link} to={`/resource/people/${id}`} color="primary" radius="xl" size="sm">View</Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        </ScrollArea>
       </Card>
     </Container>
   );
