@@ -62,10 +62,6 @@ api-explorer/
 │── README.md
 ```
 
-## Contributing
-
-Feel free to contribute by submitting a pull request. If you find any issues, please open an issue in the repository.
-
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
