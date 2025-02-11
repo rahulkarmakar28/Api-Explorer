@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
                 size="xs"
               >
                 <Stack>
-                  <Link to="/resources" onClick={() => setDrawerOpened(false)} style={{ textDecoration: 'none', color: theme === 'dark' ? '#E2E4F0' : '#DCE7FC' }}>Resources</Link>
+                  <Link to="/resources" onClick={() => setDrawerOpened(false)} style={{ textDecoration: 'none', color: theme === 'dark' ? '#E2E4F0' : '#0d1e85' }}>Resources</Link>
                   <Tooltip label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} position="bottom" withArrow>
                     <ActionIcon onClick={toggleTheme} variant="filled" color={theme === 'dark' ? 'yellow' : 'blue'} radius="xl" size="md">
                       {theme === 'dark' ? <FaSun /> : <FaMoon />}
