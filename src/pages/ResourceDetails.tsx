@@ -1,88 +1,85 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { fetchResources } from '../api/api';
-import { Table, Container, Title, TextInput, Loader, Card, Badge, Button, Text, ScrollArea } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { fetchResourceDetail, fetchEnrichmentData } from '../api/api';
+import { Card, Text, Title, Loader, Container, Group, Divider, Badge } from '@mantine/core';
 import { useAppTheme } from '../store/app.store';
 
 interface Person {
   name: string;
   birth_year: string;
-  url: string;
+  height: string;
+  mass: string;
+  hair_color: string;
+  skin_color: string;
+  eye_color: string;
+  homeworld: string;
+  [key: string]: any;
 }
 
-const ResourceList: React.FC = () => {
-  const [search, setSearch] = useState('');
-  const { data, isLoading, error } = useQuery('resources', () => fetchResources('people'));
+interface Planet {
+  name: string;
+  climate: string;
+  terrain: string;
+  population: string;
+}
+
+const ResourceDetail: React.FC = () => {
+  const { resource, id } = useParams<{ resource: string; id: string }>();
   const { theme } = useAppTheme();
 
-  if (isLoading) {
-    return (
-      <Container size="md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <Loader size="xl" color={theme === 'dark' ? 'white' : 'black'} />
-        <Text mt="md" size="lg" color={theme === 'dark' ? 'white' : 'black'}>Loading resource details...</Text>
-      </Container>
-    );
-  }
-
-  if (error) return <div>Error loading resources.</div>;
-
-  const filteredResults = data.results.filter((person: Person) =>
-    person.name.toLowerCase().includes(search.toLowerCase())
+  const { data: resourceData, isLoading: isResourceLoading, error: resourceError } = useQuery<Person>(
+    ['resourceDetail', resource, id],
+    () => fetchResourceDetail(resource as string, id as string)
   );
 
+  const {
+    data: enrichmentData,
+    isLoading: isEnrichmentLoading,
+    error: enrichmentError,
+  } = useQuery<Planet>(
+    ['enrichment', resourceData?.homeworld],
+    () => fetchEnrichmentData(resourceData!.homeworld),
+    { enabled: !!resourceData?.homeworld }
+  );
+
+  if (isResourceLoading) return <Loader size="xl" color="primary" />;
+  if (resourceError) return <Text color="red">Error loading resource details.</Text>;
+
   return (
-    <Container size="md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2rem', padding: '1rem' }}>
-      <Card
-        shadow="xl"
-        padding="xl"
-        radius="lg"
-        style={{
-          backgroundColor: theme === 'dark' ? '#1A1B1E' : '#E2E4F0',
-          color: theme === 'dark' ? 'white' : 'black',
-          width: '100%',
-          maxWidth: 800
-        }}
-      >
-        <Title order={2} align="center" color={theme === 'dark' ? 'white' : '#3D4C7E'} mb="md">People</Title>
-        <TextInput
-          placeholder="Search by name"
-          mb="md"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          styles={{ input: { borderRadius: '2rem', backgroundColor: theme === 'dark' ? '#333' : '#DCE7FCFF', color: theme === 'dark' ? 'white' : 'black' } }}
-        />
-        <ScrollArea style={{ width: '100%', maxHeight: '60vh' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <Table striped highlightOnHover style={{ minWidth: '100%', whiteSpace: 'nowrap' }}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Birth Year</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredResults.map((person: Person, index: number) => {
-                  const idMatch = person.url.match(/\/(\d+)\/?$/);
-                  const id = idMatch ? idMatch[1] : (index + 1).toString();
-                  return (
-                    <tr key={id}>
-                      <td><Badge color="blue" variant="filled" size="lg">{person.name}</Badge></td>
-                      <td>{person.birth_year}</td>
-                      <td>
-                        <Button component={Link} to={`/resource/people/${id}`} color="primary" radius="xl" size="sm">View</Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </div>
-        </ScrollArea>
+    <Container size="md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2rem' }}>
+      <Card shadow="xl" padding="xl" radius="md" style={{ backgroundColor: theme === 'dark' ? '#1A1B1E' : '#E2E4F0', color: theme === 'dark' ? 'white' : 'black', width: '100%', maxWidth: 600 }}>
+        <Title order={2} align="center" color={theme === 'dark' ? 'white' : '#3D4C7E'} mb="md">{resourceData?.name}</Title>
+        <Divider my="sm" />
+        <Group position="apart">
+          <Badge color="blue" size="lg">Birth Year: {resourceData?.birth_year}</Badge>
+          <Badge color="green" size="lg">Height: {resourceData?.height} cm</Badge>
+        </Group>
+        <Group position="apart" mt="sm">
+          <Badge color="yellow" size="lg">Mass: {resourceData?.mass} kg</Badge>
+          <Badge color="pink" size="lg">Eye Color: {resourceData?.eye_color}</Badge>
+        </Group>
+        <Group position="apart" mt="sm">
+          <Badge color="purple" size="lg">Hair Color: {resourceData?.hair_color}</Badge>
+          <Badge color="orange" size="lg">Skin Color: {resourceData?.skin_color}</Badge>
+        </Group>
       </Card>
+      {isEnrichmentLoading ? (
+        <Loader size="xl" color="primary" mt="lg" />
+      ) : enrichmentError ? (
+        <Text color="red" mt="lg">Error loading enrichment data.</Text>
+      ) : enrichmentData ? (
+        <Card shadow="xl" padding="xl" radius="md" mt="lg" style={{ backgroundColor: theme === 'dark' ? '#25262B' : '#DCDDEC', color: theme === 'dark' ? 'white' : 'black', width: '100%', maxWidth: 600 }}>
+          <Title order={3} align="center" color={theme === 'dark' ? 'white' : '#3D4C7E'} mb="md">Homeworld Details</Title>
+          <Divider my="sm" />
+          <Text align="center" size="lg" color={theme === 'dark' ? 'white' : 'black'}><b>Name:</b> {enrichmentData.name}</Text>
+          <Text align="center" size="lg" color={theme === 'dark' ? 'white' : 'black'}><b>Climate:</b> {enrichmentData.climate}</Text>
+          <Text align="center" size="lg" color={theme === 'dark' ? 'white' : 'black'}><b>Terrain:</b> {enrichmentData.terrain}</Text>
+          <Text align="center" size="lg" color={theme === 'dark' ? 'white' : 'black'}><b>Population:</b> {enrichmentData.population}</Text>
+        </Card>
+      ) : null}
     </Container>
   );
 };
 
-export default ResourceList;
+export default ResourceDetail;
