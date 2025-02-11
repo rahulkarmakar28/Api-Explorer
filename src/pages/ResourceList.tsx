@@ -4,6 +4,7 @@ import { fetchResources } from '../api/api';
 import { Table, Container, Title, TextInput, Loader, Card, Group, Badge, Button, Text, ScrollArea, Stack } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useAppTheme } from '../store/app.store';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface Person {
   name: string;
@@ -15,6 +16,7 @@ const ResourceList: React.FC = () => {
   const [search, setSearch] = useState('');
   const { data, isLoading, error } = useQuery('resources', () => fetchResources('people'));
   const { theme } = useAppTheme();
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   if (isLoading) {
     return (
@@ -52,10 +54,27 @@ const ResourceList: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           styles={{ input: { borderRadius: '2rem', backgroundColor: theme === 'dark' ? '#333' : '#DCE7FCFF', color: theme === 'dark' ? 'white' : 'black' } }}
         />
-        <ScrollArea style={{ width: '100%', maxHeight: '60vh' }}>
-          <div className="responsive-table">
-            {window.innerWidth > 768 ? (
-              <Table striped highlightOnHover>
+
+        {isMobile ? (
+          <Stack spacing="sm">
+            {filteredResults.map((person: Person, index: number) => {
+              const idMatch = person.url.match(/\/(\d+)\/?$/);
+              const id = idMatch ? idMatch[1] : (index + 1).toString();
+              return (
+                <Card key={id} shadow="sm" padding="md" radius="md" style={{ width: '100%' }}>
+                  <Group position="apart">
+                    <Badge color="blue" variant="filled" size="lg">{person.name}</Badge>
+                    <Text>{person.birth_year}</Text>
+                  </Group>
+                  <Button component={Link} to={`/resource/people/${id}`} color="primary" radius="xl" fullWidth mt="sm">View</Button>
+                </Card>
+              );
+            })}
+          </Stack>
+        ) : (
+          <ScrollArea style={{ width: '100%', maxHeight: '60vh' }}>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <Table striped highlightOnHover style={{ minWidth: 600 }}>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -79,25 +98,9 @@ const ResourceList: React.FC = () => {
                   })}
                 </tbody>
               </Table>
-            ) : (
-              <Stack spacing="sm">
-                {filteredResults.map((person: Person, index: number) => {
-                  const idMatch = person.url.match(/\/(\d+)\/?$/);
-                  const id = idMatch ? idMatch[1] : (index + 1).toString();
-                  return (
-                    <Card key={id} shadow="sm" padding="md" radius="md" style={{ width: '100%' }}>
-                      <Group position="apart">
-                        <Badge color="blue" variant="filled" size="lg">{person.name}</Badge>
-                        <Text>{person.birth_year}</Text>
-                      </Group>
-                      <Button component={Link} to={`/resource/people/${id}`} color="primary" radius="xl" fullWidth mt="sm">View</Button>
-                    </Card>
-                  );
-                })}
-              </Stack>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          </ScrollArea>
+        )}
       </Card>
     </Container>
   );
